@@ -3,9 +3,9 @@ const Route = express.Router()
 const ctrlCompanies = require("../controllers/company")
 
 Route.get("/", ctrlCompanies.findAll)
-//   .get("/:id", multerUploads, CtrlRooms.getRoomById)
-//   .post("/", multerUploads, CtrlRooms.create)
-//   .patch("/:id", multerUploads, CtrlRooms.edit)
-//   .delete("/:id", multerUploads, CtrlRooms.delete)
+  .get("/:id", ctrlCompanies.findById)
+  .post("/", ctrlCompanies.create)
+  .patch("/:id", ctrlCompanies.update)
+  .delete("/:id", ctrlCompanies.destroy)
 
 module.exports = Route

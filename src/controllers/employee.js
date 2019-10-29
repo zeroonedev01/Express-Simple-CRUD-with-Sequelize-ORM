@@ -1,9 +1,11 @@
-const modCompany = require("../models").Company
-
+require("dotenv").config()
+const bcrypt = require("bcryptjs")
+const modEmployee = require("../models").Employee
+const roundSalt = process.env.ROUND_SALT || 8
 module.exports = {
   findAll: async (req, res) => {
     try {
-      const execute = await modCompany.findAll({
+      const execute = await modEmployee.findAll({
         order: [["name", "ASC"]]
       })
       res.json({
@@ -20,7 +22,7 @@ module.exports = {
   },
   findById: async (req, res) => {
     try {
-      const execute = await modCompany.findByPk(req.params.id)
+      const execute = await modEmployee.findByPk(req.params.id)
       if (!execute) {
         res.json({
           status: 400,
@@ -43,18 +45,20 @@ module.exports = {
   create: async (req, res) => {
     try {
       const data = { ...req.body }
-      const exist = await modCompany.count({
+      data.password = bcrypt.hashSync(req.body.password, parseInt(roundSalt))
+      const exist = await modEmployee.count({
         where: {
-          name: data.name
+          email: data.email
         }
       })
+      console.log(exist)
       if (exist > 0) {
         res.json({
           status: 409,
-          message: "Duplicate Name COmpany"
+          message: "Duplicate Employee"
         })
       } else {
-        const execute = await modCompany.create(data)
+        const execute = await modEmployee.create(data)
         res.json({
           status: 201,
           message: "Success",
@@ -71,14 +75,17 @@ module.exports = {
   update: async (req, res) => {
     try {
       const data = { ...req.body }
-      const exist = await modCompany.findByPk(req.params.id)
+      if (req.body.password) {
+        data.password = bcrypt.hashSync(req.body.password, parseInt(roundSalt))
+      }
+      const exist = await modEmployee.findByPk(req.params.id)
       if (exist) {
-        const execute = await modCompany.update(data, {
+        const execute = await modEmployee.update(data, {
           where: {
             id: req.params.id
           }
         })
-        const newData = await modCompany.findByPk(req.params.id)
+        const newData = await modEmployee.findByPk(req.params.id)
         res.json({
           status: 201,
           message: "Success",
@@ -99,9 +106,9 @@ module.exports = {
   },
   destroy: async (req, res) => {
     try {
-      const exist = await modCompany.findByPk(req.params.id)
+      const exist = await modEmployee.findByPk(req.params.id)
       if (exist) {
-        const execute = await modCompany.destroy({
+        const execute = await modEmployee.destroy({
           where: {
             id: req.params.id
           }
