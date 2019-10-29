@@ -6,6 +6,7 @@
 <p align="center">
   Built with Express.js,Mysql, and Sequalize.
 </p>
+
 ## Table of Contents
 - [Table of Contents](#table-of-contents)
 - [Introduction](#introduction)
