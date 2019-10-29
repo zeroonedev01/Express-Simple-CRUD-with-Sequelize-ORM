@@ -19,6 +19,14 @@ app.use(logger("dev"))
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: false }))
 
-app.get("*", (rq, rs) => {
+app.get("/api", (rq, rs) => {
   rs.send("Welcome to the beginning")
 })
+app.get("/api/v1", (rq, rs) => {
+  rs.send("Api version 1")
+})
+const routeNav = require("./src/routes/index")
+app.use("/api/v1/", routeNav)
+// app.get("*", (rq, rs) => {
+//   rs.send("Welcome to the beginning")
+// })
