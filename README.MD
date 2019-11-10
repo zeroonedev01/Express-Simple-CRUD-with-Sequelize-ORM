@@ -19,7 +19,7 @@
 - [API Route URL (Public)](#api-route-url-public)
   - [Companies](#companies)
   - [Employees](#employees)
-- [Hosting](#hosting)
+- [Deploy](#deploy)
 - [Contributor](#contributor)
 
 ## Introduction
@@ -29,6 +29,7 @@ Lorem Ipsum
 > - CRUD Employees
 > - CRUD Companies
 > - Sequalize ORM
+> - cache
 
 ## Built With
 [![Express](https://img.shields.io/badge/Express%20-v.4.17.1-green.svg?style=rounded-square)](https://expressjs.com/)
@@ -71,16 +72,18 @@ My project directory
 ## Plugins
 
 
-| Plugin      | Version |
-| ----------- | ------- |
-| bcryptjs    | ^2.4.3  |
-| body-parser | ^1.19.0 |
-| cors        | ^2.8.5  |
-| express     | ^4.17.1 |
-| dotenv      | ^8.2.0  |
-| morgan      | ^1.9.1  |
-| mysql2      | ^2.0.0  |
-| sequalize   | ^5.21.1 |
+| Plugin          | Version |
+| --------------- | ------- |
+| bcryptjs        | ^2.4.3  |
+| body-parser     | ^1.19.0 |
+| cors            | ^2.8.5  |
+| express         | ^4.17.1 |
+| dotenv          | ^8.2.0  |
+| morgan          | ^1.9.1  |
+| mysql2          | ^2.0.0  |
+| redis           | ^2.8.0  |
+| node-redis-scan | ^1.1.0  |
+| sequalize       | ^5.21.1 |
 
 ## API Route URL (Public)
 ### Companies
@@ -102,8 +105,9 @@ My project directory
 | /api/v1/employees/    | Select All Employee | GET    |
 | /api/v1/employees/:id | Select by ID        | GET    |
 
-## Hosting
-url
+## Deploy
+heroku  : 
+aws     : 
 
 ## Contributor
 <a href="https://github.com/tejojr">
