@@ -1,17 +1,37 @@
 const modCompany = require("../models").Company
+const modEmployee = require("../models").Employee
+const { client, caching, delCache } = require("../middleware/redis")
 
 module.exports = {
-  findAll: async (req, res) => {
+  findAll: (req, res) => {
+    const key = "company-get:all"
     try {
-      const execute = await modCompany.findAll({
-        order: [["name", "ASC"]]
-      })
-      res.json({
-        status: 201,
-        message: "Success",
-        data: execute
+      client.get(key, async (err, reply) => {
+        if (err) {
+          return res.status(500).json({
+            message: "(redis)Somethin Went Wrong"
+          })
+        }
+        if (reply) {
+          res.status(200).json({
+            status: 200,
+            message: `Success Read ${key}`,
+            data: JSON.parse(reply)
+          })
+        } else {
+          const execute = await modCompany.findAll({
+            order: [["name", "ASC"]]
+          })
+          caching(key, execute)
+          res.json({
+            status: 200,
+            message: `Success Read ${key}`,
+            data: execute
+          })
+        }
       })
     } catch (e) {
+      console.log(e)
       res.status(500).json({
         status: 500,
         message: e.message || "some error"
@@ -19,21 +39,45 @@ module.exports = {
     }
   },
   findById: async (req, res) => {
+    const key = `company-get:id:${req.params.id}`
     try {
-      const execute = await modCompany.findByPk(req.params.id)
-      if (!execute) {
-        res.json({
-          status: 400,
-          message: "Data Not Found"
-        })
-      } else {
-        res.json({
-          status: 201,
-          message: "Success",
-          data: execute
-        })
-      }
+      client.get(key, async (err, reply) => {
+        if (err) {
+          return res.status(500).json({
+            message: "(redis)Somethin Went Wrong"
+          })
+        }
+        if (reply) {
+          res.status(200).json({
+            status: 200,
+            message: `Success Read ${key}`,
+            data: JSON.parse(reply)
+          })
+        } else {
+          const execute = await modCompany.findByPk(req.params.id, {
+            include: [
+              {
+                model: modEmployee,
+                as: "employees"
+              }
+            ]
+          })
+          if (!execute) {
+            return res.status(404).json({
+              status: 404,
+              message: "Data Not Found"
+            })
+          }
+          caching(key, execute)
+          res.json({
+            status: 200,
+            message: `Success Read ${key}`,
+            data: execute
+          })
+        }
+      })
     } catch (e) {
+      console.log(e)
       res.status(500).json({
         status: 500,
         message: e.message || "some error"
@@ -49,19 +93,21 @@ module.exports = {
         }
       })
       if (exist > 0) {
-        res.json({
+        res.status(409).json({
           status: 409,
-          message: "Duplicate Name COmpany"
+          message: "Duplicate Name Company"
         })
       } else {
         const execute = await modCompany.create(data)
-        res.json({
+        delCache("company-get*")
+        res.status(201).json({
           status: 201,
-          message: "Success",
+          message: "Data Added Successfully",
           data: execute
         })
       }
     } catch (e) {
+      console.log(e)
       res.status(500).json({
         status: 500,
         message: e.message || "some error"
@@ -73,24 +119,21 @@ module.exports = {
       const data = { ...req.body }
       const exist = await modCompany.findByPk(req.params.id)
       if (exist) {
-        const execute = await modCompany.update(data, {
-          where: {
-            id: req.params.id
-          }
-        })
-        const newData = await modCompany.findByPk(req.params.id)
+        const execute = await exist.update(data)
+        delCache("company-get*")
         res.json({
-          status: 201,
-          message: "Success",
-          data: newData
+          status: 200,
+          message: "Data Edited Successfully",
+          data: execute
         })
       } else {
-        res.json({
-          status: 400,
+        res.status(404).json({
+          status: 404,
           message: "Data Not FOund"
         })
       }
     } catch (e) {
+      console.log(e)
       res.status(500).json({
         status: 500,
         message: e.message || "some error"
@@ -106,18 +149,20 @@ module.exports = {
             id: req.params.id
           }
         })
+        delCache("company-get*")
         res.json({
-          status: 201,
-          message: "Success",
+          status: 200,
+          message: "Data Deleted Successfully",
           data: req.params.id
         })
       } else {
-        res.json({
-          status: 400,
+        res.status(404).json({
+          status: 404,
           message: "Data Not FOund"
         })
       }
     } catch (e) {
+      console.log(e)
       res.status(500).json({
         status: 500,
         message: e.message || "some error"

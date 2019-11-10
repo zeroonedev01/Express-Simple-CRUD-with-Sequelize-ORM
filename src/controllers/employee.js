@@ -2,18 +2,38 @@ require("dotenv").config()
 const bcrypt = require("bcryptjs")
 const modEmployee = require("../models").Employee
 const roundSalt = process.env.ROUND_SALT || 8
+const { client, caching, delCache } = require("../middleware/redis")
+
 module.exports = {
   findAll: async (req, res) => {
+    const key = "employee-get:all"
     try {
-      const execute = await modEmployee.findAll({
-        order: [["name", "ASC"]]
-      })
-      res.json({
-        status: 201,
-        message: "Success",
-        data: execute
+      client.get(key, async (err, reply) => {
+        if (err) {
+          return res.status(500).json({
+            message: "(redis)Somethin Went Wrong"
+          })
+        }
+        if (reply) {
+          res.status(200).json({
+            status: 200,
+            message: `Success Read ${key}`,
+            data: JSON.parse(reply)
+          })
+        } else {
+          const execute = await modEmployee.findAll({
+            order: [["name", "ASC"]]
+          })
+          caching(key, execute)
+          res.json({
+            status: 200,
+            message: "Success Retrieve Data",
+            data: execute
+          })
+        }
       })
     } catch (e) {
+      console.log(e)
       res.status(500).json({
         status: 500,
         message: e.message || "some error"
@@ -21,21 +41,38 @@ module.exports = {
     }
   },
   findById: async (req, res) => {
+    const key = `employee-get:id:${req.params.id}`
     try {
-      const execute = await modEmployee.findByPk(req.params.id)
-      if (!execute) {
-        res.json({
-          status: 400,
-          message: "Data Not Found"
-        })
-      } else {
-        res.json({
-          status: 201,
-          message: "Success",
-          data: execute
-        })
-      }
+      client.get(key, async (err, reply) => {
+        if (err) {
+          return res.status(500).json({
+            message: "(redis)Somethin Went Wrong"
+          })
+        }
+        if (reply) {
+          res.status(200).json({
+            status: 200,
+            message: `Success Read ${key}`,
+            data: JSON.parse(reply)
+          })
+        } else {
+          const execute = await modEmployee.findByPk(req.params.id)
+          if (!execute) {
+            return res.status(404).json({
+              status: 404,
+              message: "Data Not Found"
+            })
+          }
+          caching(key, execute)
+          res.json({
+            status: 200,
+            message: "Success Retrieve Data",
+            data: execute
+          })
+        }
+      })
     } catch (e) {
+      console.log(e)
       res.status(500).json({
         status: 500,
         message: e.message || "some error"
@@ -53,19 +90,21 @@ module.exports = {
       })
       console.log(exist)
       if (exist > 0) {
-        res.json({
+        res.status(409).json({
           status: 409,
           message: "Duplicate Employee"
         })
       } else {
         const execute = await modEmployee.create(data)
-        res.json({
+        delCache("employee-get*")
+        res.status(201).json({
           status: 201,
           message: "Success",
           data: execute
         })
       }
     } catch (e) {
+      console.log(e)
       res.status(500).json({
         status: 500,
         message: e.message || "some error"
@@ -80,24 +119,21 @@ module.exports = {
       }
       const exist = await modEmployee.findByPk(req.params.id)
       if (exist) {
-        const execute = await modEmployee.update(data, {
-          where: {
-            id: req.params.id
-          }
-        })
-        const newData = await modEmployee.findByPk(req.params.id)
+        const execute = await exist.update(data)
+        delCache("employee-get*")
         res.json({
-          status: 201,
-          message: "Success",
-          data: newData
+          status: 200,
+          message: "Data Edited Successfully",
+          data: execute
         })
       } else {
-        res.json({
-          status: 400,
-          message: "Data Not FOund"
+        res.status(404).json({
+          status: 404,
+          message: "Data Not Found"
         })
       }
     } catch (e) {
+      console.log(e)
       res.status(500).json({
         status: 500,
         message: e.message || "some error"
@@ -113,18 +149,20 @@ module.exports = {
             id: req.params.id
           }
         })
+        delCache("employee-get*")
         res.json({
-          status: 201,
-          message: "Success",
+          status: 200,
+          message: "Data Deleted Successfully",
           data: req.params.id
         })
       } else {
-        res.json({
-          status: 400,
-          message: "Data Not FOund"
+        res.status(404).json({
+          status: 404,
+          message: "Data Not Found"
         })
       }
     } catch (e) {
+      console.log(e)
       res.status(500).json({
         status: 500,
         message: e.message || "some error"
