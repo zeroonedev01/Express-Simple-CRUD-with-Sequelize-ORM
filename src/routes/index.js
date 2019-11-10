@@ -3,9 +3,9 @@ const route = express.Router()
 
 // Import Route
 const companies = require("./company")
-const employee = require("./employee")
+const employees = require("./employee")
 
 route.use("/companies", companies)
-route.use("/employees", employee)
+route.use("/employees", employees)
 
 module.exports = route
