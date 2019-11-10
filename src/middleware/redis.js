@@ -1,33 +1,27 @@
 require("dotenv").config()
 const redis = require("redis")
-const redis_port = process.env.REDIS_PORT || 6739
-const redis_host = process.env.REDIS_HOST || "127.0.0.1"
-
-const client = redis.createClient(redis_port, iredis_host)
+const redisScan = require("node-redis-scan")
+const redis_url = process.env.REDIS_URL || "redis://localhost:6379"
+const client = redis.createClient(redis_url)
+const scanner = new redisScan(client)
+client.on("error", err => {
+  console.log("redis error =>" + err)
+})
 
 module.exports = {
-  getCached: (req, res, next) => {
-    const { redis_key } = req.headers
-    client.get(redis_key, function(err, reply) {
-      if (err) {
-        res.status(500).json({
-          message: "Somethin Went Wrong"
-        })
-      }
-      if (reply == null) {
-        next()
-      } else {
-        res.status(200).json({
-          message: `Success Read ${redis_key}`,
-          data: JSON.parse(reply)
-        })
-      }
-    })
-  },
   caching: (key, data) => {
     client.set(key, JSON.stringify(data))
   },
   delCache: key => {
-    client.del(key)
-  }
+    scanner.scan(key, (err, matchingKeys) => {
+      if (err) throw err
+      if (matchingKeys === undefined || matchingKeys.length == 0) {
+        console.log("No Matching key")
+        return
+      }
+      console.log("delete key", matchingKeys)
+      client.del(matchingKeys)
+    })
+  },
+  client
 }
