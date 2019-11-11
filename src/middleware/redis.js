@@ -1,9 +1,20 @@
 require("dotenv").config()
 const redis = require("redis")
 const redisScan = require("node-redis-scan")
-const redis_url = process.env.REDIS_URL || "redis://localhost:6379"
-const client = redis.createClient(redis_url)
+const redis_auth = process.env.REDIS_AUTH
+const redis_host = process.env.REDIS_HOST
+const redis_port = process.env.REDIS_PORT
+
+const client = redis.createClient({
+  port: redis_port,
+  host: redis_host
+})
 const scanner = new redisScan(client)
+client.auth(redis_auth, (err, response) => {
+  if (err) {
+    throw err
+  }
+})
 client.on("error", err => {
   console.log("redis error =>" + err)
 })
