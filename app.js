@@ -18,7 +18,9 @@ app.use(logger("dev"))
 // Parse incoming requests data
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: false }))
-
+app.get("/", (rq, rs) => {
+  rs.send("Hello")
+})
 app.get("/api", (rq, rs) => {
   rs.send("Welcome to the beginning")
 })
