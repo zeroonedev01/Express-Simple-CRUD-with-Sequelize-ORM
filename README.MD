@@ -117,7 +117,7 @@ $ npm start
 ## Deploy
 
 > - heroku : https://sequalizecrud.herokuapp.com/api/v1/
-> - aws : maintenance
+> - aws : http://ec2-18-234-185-164.compute-1.amazonaws.com:3000/api/v1
 
 ## Contributor
 
